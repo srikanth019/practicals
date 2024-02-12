@@ -25,6 +25,7 @@ export class UserController extends UserService {
       next(error);
     }
   };
+
   public logIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { username, email, password } = req.body;
@@ -52,6 +53,7 @@ export class UserController extends UserService {
       next(error);
     }
   };
+
   public logOut = async (
     req: CustomUserRequest,
     res: Response,
@@ -71,6 +73,7 @@ export class UserController extends UserService {
       .clearCookie("refreshToken", options)
       .json(new ApiResponse(200, {}, "User logout successfully"));
   };
+
   public refreshToken = async (
     req: CustomUserRequest,
     res: Response,
@@ -100,6 +103,23 @@ export class UserController extends UserService {
             "Access token refreshed"
           )
         );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public changeCurrentPassword = async (
+    req: CustomUserRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { user } = req;
+      const { currentPassword, newPassword } = req.body;
+      await this.changePassword(user, currentPassword, newPassword);
+      return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"));
     } catch (error) {
       next(error);
     }

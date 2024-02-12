@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { UserModel } from "@model/user.model";
+import { UserModel, UserDocument } from "@model/user.model";
 import { User } from "@interface";
 import { ApiError } from "@/utils";
 import { REFRESH_TOKEN_SECRET } from "@/config";
@@ -42,7 +42,7 @@ export class UserService {
     }
     const isPasswordValid = await user.isPasswordCorrect(userData.password);
     if (!isPasswordValid) {
-      throw new ApiError(401, "Invalid user credentials");
+      throw new ApiError(401, "Invalid user password");
     }
     // type assertion
     const { accessToken, refreshToken } = (await generateAccessAndRefreshToken(
@@ -85,6 +85,19 @@ export class UserService {
       accessToken: string;
       refreshToken: string;
     };
+  }
+
+  public async changePassword(
+    user: UserDocument,
+    currentPassword: string,
+    newPassword: string
+  ) {
+    const currentUser = await UserModel.findById(user?._id);
+    if (!currentUser?.isPasswordCorrect(currentPassword)) {
+      throw new ApiError(401, "Invalid old password");
+    }
+    currentUser.password = newPassword;
+    await currentUser.save({ validateBeforeSave: false });
   }
 }
 

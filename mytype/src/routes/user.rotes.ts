@@ -24,5 +24,10 @@ export class UserRoutes implements Routes {
       `${this.path}/refresh-token`,
       this.userController.refreshToken
     );
+    this.router.post(
+      `${this.path}/change-password`,
+      isAuthenticated,
+      this.userController.changeCurrentPassword
+    );
   }
 }

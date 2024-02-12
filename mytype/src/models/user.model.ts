@@ -92,4 +92,6 @@ userSchema.methods.generateRefreshToken = function (): string {
   );
 };
 
-export const UserModel = model<UserDocument>("User", userSchema);
+const UserModel = model<UserDocument>("User", userSchema);
+
+export { UserModel, UserDocument };
