@@ -1,0 +1,14 @@
+module => controller => services(providers)
+
+Import the module (ex:User) in app.module.
+
+Ex: path: /app.module.ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { UserModule } from './user/user.module';
+
+@Module({
+  controllers: [AppController],
+  imports: [UserModule],
+})
+export class AppModule {}
