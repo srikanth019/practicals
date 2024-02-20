@@ -1,61 +1,58 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  ListObjectsV2Command,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import express from "express";
+import upload from "./multer.js";
+import multer from "multer";
 
-const s3Client = new S3Client({
-  region: "ap-south-1",
-  credentials: {
-    accessKeyId: "AKIAXYKJTGKRC2STM6LJ",
-    secretAccessKey: "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",
-  },
+const app = express();
+
+//For single file
+app.post("/upload", upload.single("file"), (req, res) => {
+  console.log(/req/, req.file);
+  res.json({ msg: "Upload file into S3", file: req.file });
 });
 
-const getObjUrl = async (key) => {
-  const command = new GetObjectCommand({
-    Bucket: "srikanthgolla-private",
-    Key: key,
-  });
-  const url = await getSignedUrl(s3Client, command, { expiresIn: 30 });
-  return url;
-};
+//Multiple file single file  -Limit is optional(2)
+app.post("/multiple-files-upload", upload.array("files", 2), (req, res) => {
+  console.log(/req/, req.files);
+  res.json({ msg: "Upload file into S3", file: req.files });
+});
 
-const putObject = async (filename, contentType) => {
-  const command = new PutObjectCommand({
-    Bucket: "srikanthgolla-private",
-    Key: `users/uploads/${filename}`,
-    ContentType: contentType,
-  });
-  const url = await getSignedUrl(s3Client, command, { expiresIn: 20 }); // expireIn is optional
-  return url;
-};
+//Multiple file single file
+const multiUpload = upload.fields([
+  { name: "avatar", maxCount: 1 },
+  { name: "profile", maxCount: 1 },
+]);
+app.post("/files-multiple-fields-upload", multiUpload, (req, res) => {
+  console.log(/req/, req.files);
+  res.json({ msg: "Upload file into S3", files: req.files });
+});
 
-const getObjects = async () => {
-  const command = new ListObjectsV2Command({
-    Bucket: "srikanthgolla-private",
-    Key: "/",
-  });
-  const files = await s3Client.send(command);
-  console.log(/files/, files);
-};
+app.use("/", (req, res) => {
+  res.json({ msg: "Hello from AWS S3." });
+});
 
-const deleteObject = async (key) => {
-  const command = new DeleteObjectCommand({
-    Bucket: "srikanthgolla-private",
-    Key: key,
-  });
-  await s3Client.send(command);
-};
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    let message = "Internal Server Error";
 
-// getObjects();
-// deleteObject("Screenshot from 2023-12-28 17-23-47.png");
-const main = async () => {
-  console.log(/url/, await getObjUrl("users/uploads/video-1708347200004"));
-  //   console.log(await putObject(`video-${Date.now()}`, "video/mp4"));
-};
+    switch (error.code) {
+      case "LIMIT_FILE_SIZE":
+        message = "File too large";
+        break;
+      case "LIMIT_FILE_COUNT":
+        message = "File limit reached";
+        break;
+      case "LIMIT_UNEXPECTED_FILE":
+        message = "File must be an image";
+        break;
+    }
 
-main();
+    return res.status(400).json({ message });
+  }
+
+  // If no Multer error occurred, proceed to the next middleware
+  next();
+});
+
+app.listen(6000, () => {
+  console.log("Server running on port 6000");
+});
