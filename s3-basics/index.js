@@ -1,13 +1,23 @@
 import express from "express";
 import upload from "./multer.js";
 import multer from "multer";
+import dotenv from "dotenv";
+dotenv.config();
+import fs from "fs";
+import util from "util";
+import { s3FileUploadV2 } from "./s3-multer-v2.js";
+import { s3FileUploadV3 } from "./s3-multer-v3.js";
 
+const unlinkFile = util.promisify(fs.unlink);
 const app = express();
 
 //For single file
-app.post("/upload", upload.single("file"), (req, res) => {
-  console.log(/req/, req.file);
-  res.json({ msg: "Upload file into S3", file: req.file });
+app.post("/upload", upload.single("image"), async (req, res) => {
+  const { file } = req;
+  const result = await s3FileUploadV2(file);
+  // const result = await s3FileUploadV3(file);
+  // await unlinkFile(file.path);  // If we use disk storage then we will use the this one to remove local Files.
+  return res.json({ msg: "Success", result });
 });
 
 //Multiple file single file  -Limit is optional(2)
@@ -26,7 +36,7 @@ app.post("/files-multiple-fields-upload", multiUpload, (req, res) => {
   res.json({ msg: "Upload file into S3", files: req.files });
 });
 
-app.use("/", (req, res) => {
+app.get("/", (req, res) => {
   res.json({ msg: "Hello from AWS S3." });
 });
 
