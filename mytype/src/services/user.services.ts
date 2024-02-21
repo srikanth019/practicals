@@ -99,6 +99,76 @@ export class UserService {
     currentUser.password = newPassword;
     await currentUser.save({ validateBeforeSave: false });
   }
+
+  public async GetUsers(
+    page: number,
+    limit: number
+  ): Promise<{ users: any[]; userCount: number | string }> {
+    const skip = (page - 1) * limit;
+    // const data = await UserModel.aggregate([
+    //   {
+    //     $facet: {
+    //       users: [
+    //         { $skip: skip },
+    //         { $limit: limit },
+    //         // Add other pipeline stages if needed for filtering, sorting, etc.
+    //       ],
+    //       userCount: [{ $count: "count" }],
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       users: 1,
+    //       userCount: {
+    //         $ifNull: [{ $arrayElemAt: ["$userCount.count", 0] }, 0],
+    //       },
+    //     },
+    //   },
+    // ]);
+
+    const users = await UserModel.find({})
+      .skip(skip)
+      .limit(limit)
+      // Exclude the password field from the result
+      .select("-password")
+      // Add other query conditions if needed for filtering, sorting, etc.
+      .exec();
+
+    const userCount = await UserModel.countDocuments({});
+
+    const result = {
+      users: users,
+      userCount: userCount,
+    };
+
+    // Now `result` contains both the array of users (with "password" excluded) and the total count.
+
+    console.log(/data/, result);
+    return result;
+  }
+
+  public async GetUser(userId: string | Types.ObjectId) {
+    return await UserModel.findById(userId).select("-password");
+  }
+
+  public async UpdateUser(
+    userId: string | Types.ObjectId,
+    fullName: string,
+    username: string
+  ) {
+    return await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        fullName,
+        username,
+      },
+      { new: true }
+    );
+  }
+
+  public async DeleteUser(userId: string | Types.ObjectId) {
+    return await UserModel.findByIdAndDelete(userId).select("-password");
+  }
 }
 
 const generateAccessAndRefreshToken = async (

@@ -14,20 +14,48 @@ export class UserRoutes implements Routes {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/signup`, this.userController.signUp);
+
     this.router.post(`${this.path}/login`, this.userController.logIn);
+
     this.router.post(
       `${this.path}/logout`,
       isAuthenticated,
       this.userController.logOut
     );
+
     this.router.post(
       `${this.path}/refresh-token`,
       this.userController.refreshToken
     );
+
     this.router.post(
       `${this.path}/change-password`,
       isAuthenticated,
       this.userController.changeCurrentPassword
+    );
+
+    this.router.get(
+      `${this.path}/`,
+      isAuthenticated,
+      this.userController.getUsers
+    );
+
+    this.router.get(
+      `${this.path}/:userId`,
+      isAuthenticated,
+      this.userController.getUser
+    );
+
+    this.router.patch(
+      `${this.path}/:userId/update-user`,
+      isAuthenticated,
+      this.userController.updateUser
+    );
+
+    this.router.delete(
+      `${this.path}/:userId`,
+      isAuthenticated,
+      this.userController.deleteUser
     );
   }
 }

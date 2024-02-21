@@ -124,4 +124,81 @@ export class UserController extends UserService {
       next(error);
     }
   };
+
+  public getUsers = async (
+    req: CustomUserRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const page = parseInt(req.query.page as string, 10) || 1; // Convert to number or default to 1
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const userData = await this.GetUsers(page, limit);
+
+      if (!userData.users?.length) {
+        throw new ApiError(404, `Users not found.`);
+      }
+      return res
+        .status(200)
+        .json(new ApiResponse(200, userData, "Users fetched successfully"));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUser = async (
+    req: CustomUserRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { userId } = req.params;
+      const user = await this.GetUser(userId);
+      if (!user) {
+        throw new ApiError(404, `User not found with id ${userId}`);
+      }
+      return res.status(200).json(new ApiResponse(200, user, "User fetched"));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateUser = async (
+    req: CustomUserRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { fullName, username } = req.body;
+      const { userId } = req.params;
+      if (!username || !fullName) {
+        throw new ApiError(409, "email and fullName required");
+      }
+      const updatedUser = await this.UpdateUser(userId, fullName, username);
+      return res
+        .status(200)
+        .json(new ApiResponse(200, updatedUser, "User updated"));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public deleteUser = async (
+    req: CustomUserRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { userId } = req.params;
+      const data = await this.DeleteUser(userId);
+      console.log(data);
+
+      if (!data) {
+        throw new ApiError(404, `User not found with id ${userId}`);
+      }
+      return res.status(200).json(new ApiResponse(200, data, "User deleted."));
+    } catch (error) {
+      next(error);
+    }
+  };
 }
