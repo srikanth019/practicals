@@ -3,8 +3,8 @@ import cookieParser from "cookie-parser";
 import { dbConnection } from "@database";
 import { ErrorMiddleware } from "@middleware";
 import { routes } from "./routes";
+import { PORT } from "./config";
 
-let PORT = 5000;
 export class App {
   public app: express.Application;
   public env: string;
@@ -13,7 +13,7 @@ export class App {
   constructor() {
     this.app = express();
     this.env = "development";
-    this.port = PORT;
+    this.port = parseInt(PORT || "5000", 10);
 
     this.connectToDatabase();
     this.initializeMiddlewares();

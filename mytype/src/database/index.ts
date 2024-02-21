@@ -1,10 +1,11 @@
 import { connect, set } from "mongoose";
 
-import { DB_HOST, DB_DATABASE, DB_PORT, NODE_ENV } from "@config";
+import { NODE_ENV, MONGO_URL } from "@config";
 
 export const dbConnection = async () => {
   const dbConfig = {
-    url: `mongodb://${DB_HOST}:${DB_PORT}/${DB_DATABASE}`,
+    // url: `mongodb://${DB_HOST}:${DB_PORT}/${DB_DATABASE}`,
+    url: MONGO_URL || "mongodb://localhost:27017/dev",
   };
 
   if (NODE_ENV !== "production") {
