@@ -4,13 +4,20 @@ import { UserModel, UserDocument } from "@model/user.model";
 import { User } from "@interface";
 import { ApiError } from "@/utils";
 import { REFRESH_TOKEN_SECRET } from "@/config";
+import { uploadCloudinary } from "@/utils/cloudinary";
 
 export class UserService {
-  public async signup(userData: User): Promise<User> {
+  public async signup(
+    userData: User,
+    avatar: string | undefined
+  ): Promise<User> {
     const existingUser = await UserModel.findOne({
       $or: [{ email: userData.email }, { username: userData.username }],
     });
-
+    if (avatar) {
+      const avatarUrl = await uploadCloudinary(avatar);
+      userData.avatar = avatarUrl!;
+    }
     if (existingUser) {
       const field =
         existingUser.email === userData.email ? "email" : "username";
@@ -19,7 +26,6 @@ export class UserService {
         `This ${field} ${userData[field]} already exists`
       );
     }
-
     const user = await UserModel.create(userData);
     const createdUser = await UserModel.findById(user._id).select([
       "-password",
@@ -142,8 +148,6 @@ export class UserService {
     };
 
     // Now `result` contains both the array of users (with "password" excluded) and the total count.
-
-    console.log(/data/, result);
     return result;
   }
 
@@ -154,13 +158,24 @@ export class UserService {
   public async UpdateUser(
     userId: string | Types.ObjectId,
     fullName: string,
-    username: string
+    username: string,
+    avatar: string | undefined
   ) {
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const avatarUrl = avatar
+      ? await uploadCloudinary(avatar)
+      : existingUser.avatar;
+
     return await UserModel.findByIdAndUpdate(
       userId,
       {
         fullName,
         username,
+        avatar: avatarUrl,
       },
       { new: true }
     );

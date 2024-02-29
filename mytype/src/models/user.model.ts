@@ -32,6 +32,9 @@ const userSchema: Schema<UserDocument> = new Schema(
       lowercase: true,
       trim: true,
     },
+    avatar: {
+      type: String,
+    },
     fullName: {
       type: String,
       required: true,

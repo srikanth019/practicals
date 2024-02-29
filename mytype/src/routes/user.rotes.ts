@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Routes } from "@interface";
 import { UserController } from "@controller";
 import { isAuthenticated } from "@/middleware";
+import { upload } from "@/middleware/multer.middleware";
 
 export class UserRoutes implements Routes {
   public router = Router();
@@ -13,7 +14,11 @@ export class UserRoutes implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/signup`, this.userController.signUp);
+    this.router.post(
+      `${this.path}/signup`,
+      upload.single("avatar"),
+      this.userController.signUp
+    );
 
     this.router.post(`${this.path}/login`, this.userController.logIn);
 
@@ -49,6 +54,7 @@ export class UserRoutes implements Routes {
     this.router.patch(
       `${this.path}/:userId/update-user`,
       isAuthenticated,
+      upload.single("avatar"),
       this.userController.updateUser
     );
 

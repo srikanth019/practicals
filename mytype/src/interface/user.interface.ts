@@ -6,6 +6,7 @@ export interface User {
   email: string;
   password: string;
   fullName: string;
+  avatar?: string;
   refreshToken: string;
 }
 

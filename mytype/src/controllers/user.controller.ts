@@ -2,20 +2,23 @@ import { Request, Response, NextFunction } from "express";
 import { UserService } from "@/services";
 import { CustomUserRequest, User } from "@interface";
 import { ApiError, ApiResponse } from "@/utils";
-
+import fs from "fs";
 export class UserController extends UserService {
   public signUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const avatar = req.file?.path;
       const { username, fullName, email, password } = req.body;
       if (
         ![username, fullName, email, username, password].every(
           (field) => field && field.trim() !== ""
         )
       ) {
+        if (avatar) fs.unlinkSync(avatar);
         throw new ApiError(409, "Please provide required fields");
       }
+
       const userData: User = req.body;
-      const signUpUserData: User = await this.signup(userData);
+      const signUpUserData: User = await this.signup(userData, avatar);
       return res
         .status(201)
         .json(
@@ -170,11 +173,19 @@ export class UserController extends UserService {
   ) => {
     try {
       const { fullName, username } = req.body;
+
+      const avatar = req.file?.path;
+
       const { userId } = req.params;
       if (!username || !fullName) {
         throw new ApiError(409, "email and fullName required");
       }
-      const updatedUser = await this.UpdateUser(userId, fullName, username);
+      const updatedUser = await this.UpdateUser(
+        userId,
+        fullName,
+        username,
+        avatar
+      );
       return res
         .status(200)
         .json(new ApiResponse(200, updatedUser, "User updated"));
