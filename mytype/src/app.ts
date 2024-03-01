@@ -4,7 +4,7 @@ import { dbConnection } from "@database";
 import { ErrorMiddleware } from "@middleware";
 import { routes } from "./routes";
 import { PORT } from "./config";
-
+import { i18n } from "./utils";
 export class App {
   public app: express.Application;
   public env: string;
@@ -35,6 +35,7 @@ export class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+    this.app.use(i18n.init);
   }
 
   private initializeRoute() {

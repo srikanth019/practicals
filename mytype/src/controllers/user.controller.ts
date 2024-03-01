@@ -3,6 +3,7 @@ import { UserService } from "@/services";
 import { CustomUserRequest, User } from "@interface";
 import { ApiError, ApiResponse } from "@/utils";
 import fs from "fs";
+import { HTTP_STATUS_CODES } from "@/constants";
 export class UserController extends UserService {
   public signUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -14,16 +15,26 @@ export class UserController extends UserService {
         )
       ) {
         if (avatar) fs.unlinkSync(avatar);
-        throw new ApiError(409, "Please provide required fields");
+        throw new ApiError(
+          HTTP_STATUS_CODES.FORBIDDEN,
+          "Please provide required fields"
+        );
       }
 
       const userData: User = req.body;
       const signUpUserData: User = await this.signup(userData, avatar);
-      return res
-        .status(201)
-        .json(
-          new ApiResponse(200, signUpUserData, "User registered successfully")
-        );
+      // With success response class
+      // return res
+      //   .status(201)
+      //   .json(
+      //     new ApiResponse(200, signUpUserData, "User registered successfully")
+      //   );
+      const response = new ApiResponse(
+        HTTP_STATUS_CODES.CREATED,
+        "User registered successfully",
+        signUpUserData
+      );
+      return response.sendSuccessResponse(res);
     } catch (error) {
       next(error);
     }
@@ -33,7 +44,10 @@ export class UserController extends UserService {
     try {
       const { username, email, password } = req.body;
       if (!(username || email) && password) {
-        throw new ApiError(409, "Please provide required fields for Login");
+        throw new ApiError(
+          HTTP_STATUS_CODES.FORBIDDEN,
+          "Please provide required fields for Login"
+        );
       }
       const loginData: User = req.body;
       const { accessToken, refreshToken } = await this.login(loginData);
@@ -46,11 +60,10 @@ export class UserController extends UserService {
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
-          new ApiResponse(
-            200,
-            { accessToken, refreshToken },
-            "User login successfully"
-          )
+          new ApiResponse(HTTP_STATUS_CODES.OK, "User login successfully", {
+            accessToken,
+            refreshToken,
+          })
         );
     } catch (error) {
       next(error);
@@ -63,7 +76,6 @@ export class UserController extends UserService {
     next: NextFunction
   ) => {
     const { user } = req;
-    console.log(/user/, user);
 
     await this.logout(user);
     const options = {
@@ -74,7 +86,9 @@ export class UserController extends UserService {
       .status(200)
       .clearCookie("accessToken", options)
       .clearCookie("refreshToken", options)
-      .json(new ApiResponse(200, {}, "User logout successfully"));
+      .json(
+        new ApiResponse(HTTP_STATUS_CODES.OK, "User logout successfully", {})
+      );
   };
 
   public refreshToken = async (
@@ -86,7 +100,10 @@ export class UserController extends UserService {
       const oldRefreshToken =
         req.cookies?.refreshToken || req.body?.refreshToken;
       if (!oldRefreshToken) {
-        throw new ApiError(401, "Unauthorized request");
+        throw new ApiError(
+          HTTP_STATUS_CODES.UNAUTHORIZED,
+          "Unauthorized request"
+        );
       }
       const { accessToken, refreshToken } = await this.getNewRefreshToken(
         oldRefreshToken
@@ -96,15 +113,14 @@ export class UserController extends UserService {
         secure: true,
       };
       return res
-        .status(200)
+        .status(HTTP_STATUS_CODES.CREATED)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
-          new ApiResponse(
-            200,
-            { accessToken, refreshToken },
-            "Access token refreshed"
-          )
+          new ApiResponse(HTTP_STATUS_CODES.OK, "Access token refreshed", {
+            accessToken,
+            refreshToken,
+          })
         );
     } catch (error) {
       next(error);
@@ -122,7 +138,13 @@ export class UserController extends UserService {
       await this.changePassword(user, currentPassword, newPassword);
       return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Password changed successfully"));
+        .json(
+          new ApiResponse(
+            HTTP_STATUS_CODES.OK,
+            "Password changed successfully",
+            {}
+          )
+        );
     } catch (error) {
       next(error);
     }
@@ -139,11 +161,15 @@ export class UserController extends UserService {
       const userData = await this.GetUsers(page, limit);
 
       if (!userData.users?.length) {
-        throw new ApiError(404, `Users not found.`);
+        throw new ApiError(HTTP_STATUS_CODES.NOT_FOUND, "USERS_DOES_NOT_EXIST");
       }
-      return res
-        .status(200)
-        .json(new ApiResponse(200, userData, "Users fetched successfully"));
+
+      return new ApiResponse(
+        HTTP_STATUS_CODES.OK,
+        "USERS_FETCHED_SUCCESSFULLY",
+        userData
+      ).sendSuccessResponse(res);
+      // return new ApiResponse(200, "Users fetched successfully", userData);
     } catch (error) {
       next(error);
     }
@@ -158,9 +184,11 @@ export class UserController extends UserService {
       const { userId } = req.params;
       const user = await this.GetUser(userId);
       if (!user) {
-        throw new ApiError(404, `User not found with id ${userId}`);
+        throw new ApiError(HTTP_STATUS_CODES.NOT_FOUND, `USER_DOES_NOT_EXIST`);
       }
-      return res.status(200).json(new ApiResponse(200, user, "User fetched"));
+      return res
+        .status(200)
+        .json(new ApiResponse(HTTP_STATUS_CODES.OK, "USER_FETCHED", user));
     } catch (error) {
       next(error);
     }
@@ -178,7 +206,10 @@ export class UserController extends UserService {
 
       const { userId } = req.params;
       if (!username || !fullName) {
-        throw new ApiError(409, "email and fullName required");
+        throw new ApiError(
+          HTTP_STATUS_CODES.FORBIDDEN,
+          "email and fullName required"
+        );
       }
       const updatedUser = await this.UpdateUser(
         userId,
@@ -188,7 +219,9 @@ export class UserController extends UserService {
       );
       return res
         .status(200)
-        .json(new ApiResponse(200, updatedUser, "User updated"));
+        .json(
+          new ApiResponse(HTTP_STATUS_CODES.OK, "User updated", updatedUser)
+        );
     } catch (error) {
       next(error);
     }
@@ -205,9 +238,14 @@ export class UserController extends UserService {
       console.log(data);
 
       if (!data) {
-        throw new ApiError(404, `User not found with id ${userId}`);
+        throw new ApiError(
+          HTTP_STATUS_CODES.NOT_FOUND,
+          `User not found with id ${userId}`
+        );
       }
-      return res.status(200).json(new ApiResponse(200, data, "User deleted."));
+      return res
+        .status(200)
+        .json(new ApiResponse(HTTP_STATUS_CODES.OK, "User deleted.", data));
     } catch (error) {
       next(error);
     }

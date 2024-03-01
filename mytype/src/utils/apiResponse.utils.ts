@@ -1,14 +1,24 @@
+import { Response } from "express";
+import i18n from "i18n";
+
 class ApiResponse {
-  public statusCode: string | number;
-  public data: any;
+  public statusCode: number;
   public message?: string;
+  public data: any;
   public success?: boolean;
 
-  constructor(statusCode: string | number, data: any, message: string) {
+  constructor(statusCode: number, message: string, data: any) {
     this.statusCode = statusCode;
+    this.message = i18n.__(message || "SUCCESS");
     this.data = data;
-    this.message = message || "Success.";
     this.success = true;
+    Object.setPrototypeOf(this, ApiResponse.prototype);
+  }
+
+  public sendSuccessResponse(res: Response) {
+    return res
+      .status(this.statusCode)
+      .json({ message: this.message, data: this.data, success: this.success });
   }
 }
 

@@ -2,9 +2,8 @@ import { Types } from "mongoose";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { UserModel, UserDocument } from "@model/user.model";
 import { User } from "@interface";
-import { ApiError } from "@/utils";
+import { ApiError, uploadCloudinary } from "@/utils";
 import { REFRESH_TOKEN_SECRET } from "@/config";
-import { uploadCloudinary } from "@/utils/cloudinary";
 
 export class UserService {
   public async signup(

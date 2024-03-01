@@ -3,8 +3,8 @@ export class ApiError extends Error {
   public message: string;
 
   constructor(status?: number, message?: string) {
-    super(message || "Something went wrong");
+    super(message || "SOMETHING_WENT_WRONG");
     this.status = status || 500;
-    this.message = message || "Something went wrong";
+    this.message = i18n.__(message || "SOMETHING_WENT_WRONG");
   }
 }

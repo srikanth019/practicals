@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { Routes } from "@interface";
 import { UserController } from "@controller";
-import { isAuthenticated } from "@/middleware";
-import { upload } from "@/middleware/multer.middleware";
+import { isAuthenticated, upload } from "@/middleware";
+import { ValidationMiddleware } from "@/middleware/validation.middleware";
+import { CreateUserDto } from "@/dtos/user.dto";
 
 export class UserRoutes implements Routes {
   public router = Router();
@@ -17,6 +18,7 @@ export class UserRoutes implements Routes {
     this.router.post(
       `${this.path}/signup`,
       upload.single("avatar"),
+      ValidationMiddleware(CreateUserDto),
       this.userController.signUp
     );
 
