@@ -39,7 +39,7 @@ app.post(
       case "checkout.session.completed":
         session = event.data.object;
         console.log(/session_success/, session);
-        sendMail(session.customer_details.email);
+        // sendMail(session.customer_details.email);
         // Then define and call a function to handle the event checkout.session.completed
         break;
       // ... handle other event types

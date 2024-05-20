@@ -43,13 +43,13 @@ export class UserRoutes implements Routes {
 
     this.router.get(
       `${this.path}/`,
-      isAuthenticated,
+      // isAuthenticated,
       this.userController.getUsers
     );
 
     this.router.get(
       `${this.path}/:userId`,
-      isAuthenticated,
+      // isAuthenticated,
       this.userController.getUser
     );
 

@@ -4,18 +4,18 @@ import path from "path";
 // const upload = multer({ dest: "uploads/" });
 
 // for custom filename
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     console.log(/fileD/, file);
-//     cb(null, "uploads");
-//   },
-//   filename: (req, file, cb) => {
-//     const { originalname } = file;
-//     cb(null, `${Date.now()}-${originalname}`);
-//   },
-// });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log(/fileD/, file);
+    cb(null, "uploads");
+  },
+  filename: (req, file, cb) => {
+    const { originalname } = file;
+    cb(null, `${Date.now()}-${originalname}`);
+  },
+});
 
-const storage = multer.memoryStorage();
+// const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowedFileTypes = /jpeg|jpg|png/;
